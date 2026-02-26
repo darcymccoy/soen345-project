@@ -22,10 +22,18 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -37,4 +45,8 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.3'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'androidx.arch.core:core-testing:2.1.0'
+    testImplementation 'org.mockito:mockito-core:5.16.1'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.16.1'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
 }
