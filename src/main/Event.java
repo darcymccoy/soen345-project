@@ -1,3 +1,5 @@
+package main;
+
 public class Event {
     private String eventId;
     private long date;
@@ -15,6 +17,10 @@ public class Event {
         this.date = date;
         this.location = location;
         this.category = category;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
     }
 
     public String getEventId() {

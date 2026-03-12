@@ -1,1 +1,2 @@
 firebase.database.url=https://YOUR_PROJECT_ID
+firebase.database.secret=YOUR_DATABASE_SECRET
