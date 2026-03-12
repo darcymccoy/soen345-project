@@ -1,3 +1,5 @@
+package main;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -9,12 +11,14 @@ import java.util.Properties;
 public class Database {
 
     private static final String BASE_URL;
+    private static final String DB_SECRET;
 
     static {
         try {
             Properties config = new Properties();
             config.load(new FileInputStream("config.properties"));
             BASE_URL = config.getProperty("firebase.database.url");
+            DB_SECRET = config.getProperty("firebase.database.secret");
         } catch (Exception e) {
             throw new RuntimeException("Failed to load config.properties", e);
         }
@@ -27,11 +31,20 @@ public class Database {
         conn.disconnect();
     }
 
-    public static void addEvent(Event event) throws Exception {
+    public static String addEvent(Event event) throws Exception {
         HttpURLConnection conn = openConnection(BASE_URL + "/events.json", "POST");
         writeBody(conn, event.toJson());
         System.out.println("addEvent response: " + conn.getResponseCode());
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null)
+            response.append(line);
+        reader.close();
         conn.disconnect();
+        String responseStr = response.toString();
+        String eventId = responseStr.replaceAll(".*\"name\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+        return eventId;
     }
 
     public static String getAllEvents() throws Exception {
@@ -59,7 +72,8 @@ public class Database {
     }
 
     private static HttpURLConnection openConnection(String urlStr, String method) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) URI.create(urlStr).toURL().openConnection();
+        String authedUrl = urlStr + (urlStr.contains("?") ? "&" : "?") + "auth=" + DB_SECRET;
+        HttpURLConnection conn = (HttpURLConnection) URI.create(authedUrl).toURL().openConnection();
         conn.setRequestMethod(method);
         conn.setRequestProperty("Content-Type", "application/json");
         if (!method.equals("GET")) conn.setDoOutput(true);
