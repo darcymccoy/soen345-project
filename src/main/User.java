@@ -4,8 +4,11 @@ public class User {
     private String email;
     private long phoneNumber;
 
-    public User(String email, long phoneNumber) {
+    public User(String email) {
         this.email = email;
+    }
+
+    public User(long phoneNumber){
         this.phoneNumber = phoneNumber;
     }
 
