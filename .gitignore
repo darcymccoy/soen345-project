@@ -1,26 +1,5 @@
-# Claude Code
-.claude/
-
-# Gradle files
-.gradle/
-build/
-
 # Build
 out/
-
-# Local configuration file
-local.properties
-
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.aab
-*.apk
-output-metadata.json
 
 # IntelliJ
 *.iml
@@ -32,15 +11,5 @@ render.experimental.xml
 # VSCode
 .vscode/
 
-# Keystore files
-*.jks
-*.keystore
-
-# Google Services
-google-services.json
-
 # Local config
 config.properties
-
-# Android Profiling
-*.hprof
