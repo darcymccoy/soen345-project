@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Download JUnit 5 JARs
+        run: |
+          mkdir -p lib
+          JUNIT_VERSION=5.8.1
+          PLATFORM_VERSION=1.8.1
+          BASE=https://repo1.maven.org/maven2
+
+          curl -sL -o lib/junit-jupiter-api-${JUNIT_VERSION}.jar \
+            ${BASE}/org/junit/jupiter/junit-jupiter-api/${JUNIT_VERSION}/junit-jupiter-api-${JUNIT_VERSION}.jar
+          curl -sL -o lib/junit-jupiter-engine-${JUNIT_VERSION}.jar \
+            ${BASE}/org/junit/jupiter/junit-jupiter-engine/${JUNIT_VERSION}/junit-jupiter-engine-${JUNIT_VERSION}.jar
+          curl -sL -o lib/junit-jupiter-params-${JUNIT_VERSION}.jar \
+            ${BASE}/org/junit/jupiter/junit-jupiter-params/${JUNIT_VERSION}/junit-jupiter-params-${JUNIT_VERSION}.jar
+          curl -sL -o lib/junit-platform-commons-${PLATFORM_VERSION}.jar \
+            ${BASE}/org/junit/platform/junit-platform-commons/${PLATFORM_VERSION}/junit-platform-commons-${PLATFORM_VERSION}.jar
+          curl -sL -o lib/junit-platform-engine-${PLATFORM_VERSION}.jar \
+            ${BASE}/org/junit/platform/junit-platform-engine/${PLATFORM_VERSION}/junit-platform-engine-${PLATFORM_VERSION}.jar
+          curl -sL -o lib/junit-platform-launcher-${PLATFORM_VERSION}.jar \
+            ${BASE}/org/junit/platform/junit-platform-launcher/${PLATFORM_VERSION}/junit-platform-launcher-${PLATFORM_VERSION}.jar
+          curl -sL -o lib/junit-platform-console-standalone-${PLATFORM_VERSION}.jar \
+            ${BASE}/org/junit/platform/junit-platform-console-standalone/${PLATFORM_VERSION}/junit-platform-console-standalone-${PLATFORM_VERSION}.jar
+          curl -sL -o lib/opentest4j-1.2.0.jar \
+            ${BASE}/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar
+          curl -sL -o lib/apiguardian-api-1.1.2.jar \
+            ${BASE}/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar \
+            && curl -sL -o lib/apiguardian-api-1.1.2.jar \
+            ${BASE}/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar
+
+      - name: Create config.properties
+        run: |
+          cat > config.properties <<EOF
+          firebase.database.url=${{ secrets.FIREBASE_DATABASE_URL }}
+          firebase.database.secret=${{ secrets.FIREBASE_DATABASE_SECRET }}
+          EOF
+
+      - name: Compile source
+        run: |
+          mkdir -p out/production
+          javac -d out/production src/main/*.java
+
+      - name: Compile tests
+        run: |
+          mkdir -p out/test
+          javac -d out/test -cp "out/production:lib/*" src/test/*.java
+
+      - name: Run tests
+        run: |
+          java -jar lib/junit-platform-console-standalone-1.8.1.jar \
+            --class-path "out/test:out/production:lib/*" \
+            --scan-class-path out/test
