@@ -47,6 +47,17 @@ public class Database {
         return eventId;
     }
 
+    public static String getAllUsers() throws Exception {
+        HttpURLConnection conn = openConnection(BASE_URL + "/users.json", "GET");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) response.append(line);
+        reader.close();
+        conn.disconnect();
+        return response.toString();
+    }
+
     public static String getAllEvents() throws Exception {
         HttpURLConnection conn = openConnection(BASE_URL + "/events.json", "GET");
         BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
