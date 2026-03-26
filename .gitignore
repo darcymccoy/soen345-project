@@ -13,6 +13,7 @@ render.experimental.xml
 
 # VSCode
 .vscode/
+lib
 
 # Local config
 config.properties
