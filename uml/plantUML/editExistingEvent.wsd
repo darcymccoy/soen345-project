@@ -1,4 +1,4 @@
-@startuml
+@startuml editExistingEvent
 title Edit Existing Event
 actor Admin
 Admin -> System: editEvent(id, date, location, category)
