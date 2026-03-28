@@ -1,0 +1,9 @@
+@startuml addNewEvent
+title Add New Event
+Admin -> System: addEvent(e)
+System -> Server: handleEvents(HttpExchange exchange)
+Server -> Database: addEvent(Event event)
+Database --> Server: success
+Server --> System: success
+System --> Admin: Event created
+@enduml

@@ -1,0 +1,12 @@
+@startuml cancelEvent
+title Cancel Event
+actor Admin
+Admin -> System: deleteEvent(id)
+System -> Server: handleEvents(HttpExchange exchange)
+Server -> Database: deleteEvent(Event event)
+Database --> Server: success
+Server -> NotificationServer: sendCancellationMessage (recipient, message)\n(for affected users)
+NotificationServer --> Server: sent
+Server --> System: success
+System --> Admin: Event cancelled and users notified
+@enduml
