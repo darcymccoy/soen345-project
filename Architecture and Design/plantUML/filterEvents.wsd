@@ -1,0 +1,10 @@
+@startuml filterEvents
+title Filter Events
+actor User
+User -> System: filterEvents(date, location, category)
+System -> Server: handleEvents(HttpExchange exchange)
+Server -> Database: Database.getFilteredEvents(filters)
+Database --> Server: response.toString()
+Server --> System: sendResponse(exchange, 200, json);
+System --> User: Display events list
+@enduml
