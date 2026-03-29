@@ -4,62 +4,213 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Manager</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <h1>Event Manager</h1>
     <div id="msg" class="msg"></div>
 
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('events')">Events</div>
-        <div class="tab" onclick="switchTab('users')">Users</div>
+    <!-- Auth Section (shown when not logged in) -->
+    <div id="auth-section">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+            </div>
+
+            <div id="login-form" class="auth-form active">
+                <h2>Login</h2>
+                <form onsubmit="login(event)">
+                    <label>Email <input type="email" id="login-email" required placeholder="user@example.com"></label>
+                    <label>Password <input type="password" id="login-password" required placeholder="Enter password"></label>
+                    <button type="submit">Login</button>
+                </form>
+            </div>
+
+            <div id="register-form" class="auth-form">
+                <h2>Register</h2>
+                <form onsubmit="register(event)">
+                    <label>Email <input type="email" id="register-email" required placeholder="user@example.com"></label>
+                    <label>Password <input type="password" id="register-password" required placeholder="Choose a password" minlength="6"></label>
+                    <button type="submit">Register</button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <div id="events-section" class="section active">
-        <h2>Add Event</h2>
-        <form onsubmit="addEvent(event)">
-            <label>Date <input type="datetime-local" id="event-date" required></label>
-            <label>Location <input type="text" id="event-location" required placeholder="e.g. Room 101"></label>
-            <label>Category <input type="text" id="event-category" required placeholder="e.g. Workshop"></label>
-            <button type="submit">Add Event</button>
-        </form>
+    <!-- Main App (shown when logged in) -->
+    <div id="app-section" style="display:none">
+        <div class="user-bar">
+            <span id="user-info"></span>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
 
-        <h2>All Events</h2>
-        <button onclick="loadEvents()" style="margin-bottom:12px">Refresh</button>
-        <table>
-            <thead><tr><th>Date</th><th>Location</th><th>Category</th><th>Actions</th></tr></thead>
-            <tbody id="events-table"></tbody>
-        </table>
-    </div>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('events')">Events</div>
+            <div class="tab" onclick="switchTab('reservations')">My Reservations</div>
+            <div class="tab admin-only" onclick="switchTab('manage')" style="display:none">Manage Events</div>
+            <div class="tab admin-only" onclick="switchTab('users')" style="display:none">Users</div>
+        </div>
 
-    <div id="users-section" class="section">
-        <h2>Add User</h2>
-        <form onsubmit="addUser(event)">
-            <label>Email <input type="email" id="user-email" placeholder="user@example.com"></label>
-            <label>Phone <input type="number" id="user-phone" placeholder="5551234567"></label>
-            <button type="submit">Add User</button>
-        </form>
+        <!-- Events Tab (all users) -->
+        <div id="events-section" class="section active">
+            <h2>Available Events</h2>
 
-        <h2>All Users</h2>
-        <button onclick="loadUsers()" style="margin-bottom:12px">Refresh</button>
-        <table>
-            <thead><tr><th>Email</th><th>Phone Number</th></tr></thead>
-            <tbody id="users-table"></tbody>
-        </table>
+            <div class="filters">
+                <label>Date <input type="date" id="filter-date" onchange="filterEvents()"></label>
+                <label>Location <input type="text" id="filter-location" placeholder="Filter by location" oninput="filterEvents()"></label>
+                <label>Category <input type="text" id="filter-category" placeholder="Filter by category" oninput="filterEvents()"></label>
+                <button class="secondary" onclick="clearFilters()">Clear Filters</button>
+            </div>
+
+            <button onclick="loadEvents()" style="margin-bottom:12px">Refresh</button>
+            <table>
+                <thead><tr><th>Date</th><th>Location</th><th>Category</th><th>Actions</th></tr></thead>
+                <tbody id="events-table"></tbody>
+            </table>
+        </div>
+
+        <!-- My Reservations Tab -->
+        <div id="reservations-section" class="section">
+            <h2>My Reservations</h2>
+            <button onclick="loadReservations()" style="margin-bottom:12px">Refresh</button>
+            <table>
+                <thead><tr><th>Event</th><th>Location</th><th>Date</th><th>Reserved On</th><th>Actions</th></tr></thead>
+                <tbody id="reservations-table"></tbody>
+            </table>
+        </div>
+
+        <!-- Manage Events Tab (admin only) -->
+        <div id="manage-section" class="section">
+            <h2>Add Event</h2>
+            <form onsubmit="addEvent(event)">
+                <label>Date <input type="datetime-local" id="event-date" required></label>
+                <label>Location <input type="text" id="event-location" required placeholder="e.g. Room 101"></label>
+                <label>Category <input type="text" id="event-category" required placeholder="e.g. Workshop"></label>
+                <button type="submit">Add Event</button>
+            </form>
+
+            <h2>All Events</h2>
+            <button onclick="loadAdminEvents()" style="margin-bottom:12px">Refresh</button>
+            <table>
+                <thead><tr><th>Date</th><th>Location</th><th>Category</th><th>Actions</th></tr></thead>
+                <tbody id="admin-events-table"></tbody>
+            </table>
+        </div>
+
+        <!-- Users Tab (admin only) -->
+        <div id="users-section" class="section">
+            <h2>All Users</h2>
+            <button onclick="loadUsers()" style="margin-bottom:12px">Refresh</button>
+            <table>
+                <thead><tr><th>Email</th><th>Role</th></tr></thead>
+                <tbody id="users-table"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         const API = 'http://localhost:8080/api';
+        let currentUser = null;
+        let allEvents = {};
+
+        // ── Auth ──
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.getElementById(tab + '-form').classList.add('active');
+            document.querySelectorAll('.auth-tab').forEach(t => {
+                if (t.textContent.toLowerCase() === tab) t.classList.add('active');
+            });
+        }
+
+        async function register(e) {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            try {
+                const res = await fetch(`${API}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showMsg('Registration successful! You can now login.', 'success');
+                    switchAuthTab('login');
+                } else {
+                    showMsg(data.error || 'Registration failed', 'error');
+                }
+            } catch (err) {
+                showMsg('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function login(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const res = await fetch(`${API}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    currentUser = data;
+                    showApp();
+                    showMsg('Welcome, ' + data.email + '!', 'success');
+                } else {
+                    showMsg(data.error || 'Login failed', 'error');
+                }
+            } catch (err) {
+                showMsg('Error: ' + err.message, 'error');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('auth-section').style.display = '';
+            document.getElementById('app-section').style.display = 'none';
+            showMsg('Logged out', 'success');
+        }
+
+        function showApp() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('app-section').style.display = '';
+            document.getElementById('user-info').textContent = currentUser.email + ' (' + currentUser.role + ')';
+
+            // Show/hide admin tabs
+            const isAdmin = currentUser.role === 'admin';
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = isAdmin ? '' : 'none';
+            });
+
+            switchTab('events');
+        }
+
+        // ── Tabs ──
 
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelector(`#${tab}-section`).classList.add('active');
             document.querySelectorAll('.tab').forEach(t => {
-                if (t.textContent.toLowerCase() === tab) t.classList.add('active');
+                if (t.textContent.toLowerCase().replace(/\s+/g, '') === tab.replace(/\s+/g, '') ||
+                    (tab === 'events' && t.textContent === 'Events') ||
+                    (tab === 'reservations' && t.textContent === 'My Reservations') ||
+                    (tab === 'manage' && t.textContent === 'Manage Events') ||
+                    (tab === 'users' && t.textContent === 'Users')) {
+                    t.classList.add('active');
+                }
             });
+
             if (tab === 'events') loadEvents();
-            else loadUsers();
+            else if (tab === 'reservations') loadReservations();
+            else if (tab === 'manage') loadAdminEvents();
+            else if (tab === 'users') loadUsers();
         }
 
         function showMsg(text, type) {
@@ -69,30 +220,152 @@
             setTimeout(() => el.className = 'msg', 3000);
         }
 
+        // ── Events (public view) ──
+
         async function loadEvents() {
             try {
                 const res = await fetch(`${API}/events`);
                 const data = await res.json();
-                const tbody = document.getElementById('events-table');
-                if (!data || Object.keys(data).length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4">No events found.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = Object.entries(data).map(([id, e]) => `
-                    <tr id="row-${id}">
-                        <td>${formatDate(e.date)}</td>
-                        <td>${esc(e.location)}</td>
-                        <td>${esc(e.category)}</td>
-                        <td class="actions">
-                            <button onclick="editEvent('${id}', ${e.date}, '${esc(e.location)}', '${esc(e.category)}')">Edit</button>
-                            <button class="danger" onclick="deleteEvent('${id}')">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
+                allEvents = data || {};
+                renderFilteredEvents();
             } catch (err) {
                 showMsg('Failed to load events: ' + err.message, 'error');
             }
         }
+
+        function filterEvents() {
+            renderFilteredEvents();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-date').value = '';
+            document.getElementById('filter-location').value = '';
+            document.getElementById('filter-category').value = '';
+            renderFilteredEvents();
+        }
+
+        function renderFilteredEvents() {
+            const filterDate = document.getElementById('filter-date').value;
+            const filterLocation = document.getElementById('filter-location').value.toLowerCase();
+            const filterCategory = document.getElementById('filter-category').value.toLowerCase();
+
+            const tbody = document.getElementById('events-table');
+            const entries = Object.entries(allEvents);
+
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No events found.</td></tr>';
+                return;
+            }
+
+            const filtered = entries.filter(([id, e]) => {
+                if (filterDate) {
+                    const eventDate = new Date(e.date).toISOString().split('T')[0];
+                    if (eventDate !== filterDate) return false;
+                }
+                if (filterLocation && !(e.location || '').toLowerCase().includes(filterLocation)) return false;
+                if (filterCategory && !(e.category || '').toLowerCase().includes(filterCategory)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No events match your filters.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(([id, e]) => `
+                <tr>
+                    <td>${formatDate(e.date)}</td>
+                    <td>${esc(e.location)}</td>
+                    <td>${esc(e.category)}</td>
+                    <td class="actions">
+                        <button onclick="reserveTicket('${id}', '${esc(e.location)}', '${esc(e.category)}', ${e.date})">Reserve</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ── Reservations ──
+
+        async function reserveTicket(eventId, location, category, date) {
+            if (!currentUser) {
+                showMsg('Please login to reserve tickets', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API}/reservations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.userId,
+                        eventId: eventId,
+                        userEmail: currentUser.email,
+                        eventLocation: location,
+                        eventCategory: category,
+                        eventDate: date
+                    })
+                });
+                if (res.ok) {
+                    showMsg('Ticket reserved! A confirmation email has been sent.', 'success');
+                } else {
+                    const data = await res.json();
+                    showMsg(data.error || 'Failed to reserve ticket', 'error');
+                }
+            } catch (err) {
+                showMsg('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function loadReservations() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`${API}/reservations?userId=${currentUser.userId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('reservations-table');
+
+                if (!data || Object.keys(data).length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">No reservations found.</td></tr>';
+                    return;
+                }
+
+                // Load events to display event details
+                const eventsRes = await fetch(`${API}/events`);
+                const eventsData = await eventsRes.json();
+
+                tbody.innerHTML = Object.entries(data).map(([id, r]) => {
+                    const event = eventsData ? eventsData[r.eventId] : null;
+                    return `
+                        <tr>
+                            <td>${event ? esc(event.category) : 'Event removed'}</td>
+                            <td>${event ? esc(event.location) : '-'}</td>
+                            <td>${event ? formatDate(event.date) : '-'}</td>
+                            <td>${formatDate(r.reservedAt)}</td>
+                            <td class="actions">
+                                <button class="danger" onclick="cancelReservation('${id}')">Cancel</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                showMsg('Failed to load reservations: ' + err.message, 'error');
+            }
+        }
+
+        async function cancelReservation(reservationId) {
+            if (!confirm('Cancel this reservation?')) return;
+            try {
+                const res = await fetch(`${API}/reservations/${reservationId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showMsg('Reservation cancelled. A confirmation email has been sent.', 'success');
+                    loadReservations();
+                } else {
+                    showMsg('Failed to cancel reservation', 'error');
+                }
+            } catch (err) {
+                showMsg('Error: ' + err.message, 'error');
+            }
+        }
+
+        // ── Admin: Manage Events ──
 
         async function addEvent(e) {
             e.preventDefault();
@@ -103,22 +376,48 @@
                 const res = await fetch(`${API}/events`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, location, category })
+                    body: JSON.stringify({ date, location, category, role: currentUser.role })
                 });
                 if (res.ok) {
                     showMsg('Event added!', 'success');
                     e.target.reset();
-                    loadEvents();
+                    loadAdminEvents();
                 } else {
-                    showMsg('Failed to add event', 'error');
+                    const data = await res.json();
+                    showMsg(data.error || 'Failed to add event', 'error');
                 }
             } catch (err) {
                 showMsg('Error: ' + err.message, 'error');
             }
         }
 
+        async function loadAdminEvents() {
+            try {
+                const res = await fetch(`${API}/events`);
+                const data = await res.json();
+                const tbody = document.getElementById('admin-events-table');
+                if (!data || Object.keys(data).length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No events found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = Object.entries(data).map(([id, e]) => `
+                    <tr id="admin-row-${id}">
+                        <td>${formatDate(e.date)}</td>
+                        <td>${esc(e.location)}</td>
+                        <td>${esc(e.category)}</td>
+                        <td class="actions">
+                            <button onclick="editEvent('${id}', ${e.date}, '${esc(e.location)}', '${esc(e.category)}')">Edit</button>
+                            <button class="danger" onclick="deleteEvent('${id}')">Cancel Event</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showMsg('Failed to load events: ' + err.message, 'error');
+            }
+        }
+
         function editEvent(id, date, location, category) {
-            const row = document.getElementById('row-' + id);
+            const row = document.getElementById('admin-row-' + id);
             const d = new Date(date);
             const dateStr = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
             row.innerHTML = `
@@ -127,7 +426,7 @@
                 <td><input type="text" id="edit-cat-${id}" value="${category}"></td>
                 <td class="actions">
                     <button onclick="saveEvent('${id}')">Save</button>
-                    <button class="secondary" onclick="loadEvents()">Cancel</button>
+                    <button class="secondary" onclick="loadAdminEvents()">Cancel</button>
                 </td>
             `;
         }
@@ -140,13 +439,14 @@
                 const res = await fetch(`${API}/events/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, location, category })
+                    body: JSON.stringify({ date, location, category, role: currentUser.role })
                 });
                 if (res.ok) {
                     showMsg('Event updated!', 'success');
-                    loadEvents();
+                    loadAdminEvents();
                 } else {
-                    showMsg('Failed to update event', 'error');
+                    const data = await res.json();
+                    showMsg(data.error || 'Failed to update event', 'error');
                 }
             } catch (err) {
                 showMsg('Error: ' + err.message, 'error');
@@ -154,19 +454,22 @@
         }
 
         async function deleteEvent(id) {
-            if (!confirm('Delete this event?')) return;
+            if (!confirm('Cancel this event? This cannot be undone.')) return;
             try {
-                const res = await fetch(`${API}/events/${id}`, { method: 'DELETE' });
+                const res = await fetch(`${API}/events/${id}?role=${currentUser.role}`, { method: 'DELETE' });
                 if (res.ok) {
-                    showMsg('Event deleted!', 'success');
-                    loadEvents();
+                    showMsg('Event cancelled!', 'success');
+                    loadAdminEvents();
                 } else {
-                    showMsg('Failed to delete event', 'error');
+                    const data = await res.json();
+                    showMsg(data.error || 'Failed to cancel event', 'error');
                 }
             } catch (err) {
                 showMsg('Error: ' + err.message, 'error');
             }
         }
+
+        // ── Users (admin view) ──
 
         async function loadUsers() {
             try {
@@ -180,7 +483,7 @@
                 tbody.innerHTML = Object.entries(data).map(([id, u]) => `
                     <tr>
                         <td>${esc(u.email || '')}</td>
-                        <td>${u.phoneNumber || ''}</td>
+                        <td>${esc(u.role || 'user')}</td>
                     </tr>
                 `).join('');
             } catch (err) {
@@ -188,34 +491,7 @@
             }
         }
 
-        async function addUser(e) {
-            e.preventDefault();
-            const email = document.getElementById('user-email').value;
-            const phone = document.getElementById('user-phone').value;
-            if (!email && !phone) {
-                showMsg('Please enter an email or phone number', 'error');
-                return;
-            }
-            const body = {};
-            if (email) body.email = email;
-            if (phone) body.phoneNumber = parseInt(phone);
-            try {
-                const res = await fetch(`${API}/users`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                if (res.ok) {
-                    showMsg('User added!', 'success');
-                    e.target.reset();
-                    loadUsers();
-                } else {
-                    showMsg('Failed to add user', 'error');
-                }
-            } catch (err) {
-                showMsg('Error: ' + err.message, 'error');
-            }
-        }
+        // ── Utilities ──
 
         function formatDate(ts) {
             if (!ts) return '';
@@ -229,8 +505,6 @@
             div.textContent = s || '';
             return div.innerHTML;
         }
-
-        loadEvents();
     </script>
 </body>
 </html>
