@@ -1,7 +1,7 @@
 @startuml editExistingEvent
 title Edit Existing Event
 actor Admin
-Admin -> System: editEvent(id, date, location, category)
+Admin -> System: editEvent(eventId, date, location, category)
 System -> Server: handleEvents(HttpExchange exchange)
 Server -> Database: updateEvent (event)
 Database --> Server: success
