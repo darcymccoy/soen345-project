@@ -1,0 +1,10 @@
+@startuml viewEvents
+title View Events
+actor User
+User -> System: loadEvents()
+System -> Server: handleEvents(HttpExchange exchange)
+Server -> Database: Database.getAllEvents()
+Database --> Server: response.toString()
+Server --> System: sendResponse(exchange, 200, json);
+System --> User: Display events list
+@enduml
