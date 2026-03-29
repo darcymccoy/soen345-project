@@ -61,7 +61,7 @@ jobs:
       - name: Compile source
         run: |
           mkdir -p out/production
-          javac -d out/production src/main/*.java
+          javac -d out/production -cp "lib/*" src/main/*.java
 
       - name: Compile tests
         run: |
