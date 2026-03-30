@@ -14,6 +14,6 @@
 
 2. Set the firebase and email smtp properties
 
-3. Add `lib/javax.mail.jar` to your classpath. See [stackoverflow for more info](https://stackoverflow.com/questions/6606529/package-javax-mail-and-javax-mail-internet-do-not-exist)
+3. Download and add `lib/javax.mail.jar` and `lib\javax.activation-1.2.0.jar` to your classpath. See [stackoverflow for more info](https://stackoverflow.com/questions/6606529/package-javax-mail-and-javax-mail-internet-do-not-exist)
 
 4. Run the main method in Server.java
