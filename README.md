@@ -10,4 +10,10 @@
 
 ## Getting Started
 
-1. Make the local config.properties file and set the firebase url. See the [config.properties.example](config.properties.example)
+1. Make the local config.properties file. See the [config.properties.example](config.properties.example)
+
+2. Set the firebase and email smtp properties
+
+3. Add `lib/javax.mail.jar` to your classpath. See [stackoverflow for more info](https://stackoverflow.com/questions/6606529/package-javax-mail-and-javax-mail-internet-do-not-exist)
+
+4. Run the main method in Server.java

@@ -48,6 +48,8 @@ jobs:
             ${BASE}/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar \
             && curl -sL -o lib/apiguardian-api-1.1.2.jar \
             ${BASE}/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar
+          curl -sL -o lib/javax.mail.jar \
+            https://repo1.maven.org/maven2/com/sun/mail/javax.mail/1.6.2/javax.mail-1.6.2.jar
 
       - name: Create config.properties
         run: |
@@ -59,7 +61,7 @@ jobs:
       - name: Compile source
         run: |
           mkdir -p out/production
-          javac -d out/production src/main/*.java
+          javac -d out/production -cp "lib/*" src/main/*.java
 
       - name: Compile tests
         run: |

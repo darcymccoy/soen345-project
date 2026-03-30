@@ -1,2 +1,8 @@
 firebase.database.url=https://YOUR_PROJECT_ID
 firebase.database.secret=YOUR_DATABASE_SECRET
+
+# SMTP settings for emails
+smtp.host=smtp.gmail.com
+smtp.port=587
+smtp.user=
+smtp.password=
