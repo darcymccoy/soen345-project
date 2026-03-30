@@ -1,4 +1,4 @@
-@startuml register
+@startuml login
 title User Login
 
 actor Customer
