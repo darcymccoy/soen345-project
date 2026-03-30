@@ -1,0 +1,27 @@
+@startuml login
+title User Login
+
+actor Customer
+participant "System" as Sys
+participant "Server" as Srv
+participant "Database" as DB
+
+Customer -> Sys: Submit lgin form\n(email, password)
+activate Sys
+
+Sys -> Srv: Forward credentials (email, password)
+activate Srv
+Srv -> DB: Retrieve user info
+activate DB
+    alt Validation Failed
+        DB --> Srv: user not found
+        Srv --> Customer : Invalid Login
+    else Validation Passed
+        DB -> Srv: user record
+        Srv -> Customer: sucess
+    end
+
+
+deactivate Sys
+
+@enduml

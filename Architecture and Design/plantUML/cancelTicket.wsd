@@ -1,0 +1,50 @@
+@startuml cancelReservation
+title Cancel Reservation
+
+actor Customer
+participant "System" as Sys
+participant "Server" as Srv
+participant "Database" as DB
+participant "EmailService" as Email
+
+Customer -> Sys: cancelReservation()
+activate Sys
+
+Sys -> Sys: Confirm cancellation\n(prompt user)
+
+alt User Cancels Prompt
+    Sys --> Customer: Stay on page
+else User Confirms
+
+    Sys -> Srv: DELETE /api/reservations/{reservationId}
+    activate Srv
+
+    Srv -> DB: getReservation(reservationId)
+    activate DB
+    DB --> Srv: reservation record\n(userEmail, eventId, ...)
+    deactivate DB
+
+    Srv -> DB: deleteReservation(reservationId)
+    activate DB
+
+    alt Reservation Not Found
+        DB --> Srv: Error / null
+        Srv --> Sys: 500 Internal Server Error
+        Sys --> Customer: "Failed to cancel reservation"
+    else Deleted Successfully
+        DB --> Srv: Confirmed deleted
+        deactivate DB
+
+        Srv -> Email: sendCancellationConfirmation\n(userEmail)
+        activate Email
+        Email --> Customer: Cancellation confirmation email
+        deactivate Email
+
+        Srv --> Sys: 200 OK {status: cancelled}
+        deactivate Srv
+        Sys --> Customer: "Reservation cancelled. A confirmation email has been sent"
+    end
+end
+
+deactivate Sys
+@enduml

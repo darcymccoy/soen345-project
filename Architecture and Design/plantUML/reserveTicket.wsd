@@ -1,0 +1,42 @@
+@startuml reserveTicket
+title Reserve Ticket
+
+actor Customer
+participant "System" as Sys
+participant "Server" as Srv
+participant "Database" as DB
+participant "EmailService" as Email
+
+Customer -> Sys: reserveTicket(eventId, location, category, date)
+activate Sys
+
+Sys -> Srv: POST /api/reservations\n(userId, eventId, userEmail,\neventLocation, eventCategory, eventDate)
+activate Srv
+
+Srv -> Srv: Parse & validate body\n(userId and eventId required)
+
+alt Missing userId or eventId
+    Srv --> Sys: 400 Bad Request
+    Sys --> Customer: "userId and eventId are required"
+
+else Fields Present
+
+    Srv -> DB: addReservation(reservation)
+    
+    activate DB
+    DB -> DB: Create reservation record\n(generate reservationId, store reservedAt)
+    DB --> Srv: reservationId
+    deactivate DB
+
+    Srv -> Email: sendBookingConfirmation\n(userEmail, eventLocation,\neventCategory, dateStr)
+    activate Email
+    Email --> Customer: Booking confirmation email
+    deactivate Email
+
+    Srv --> Sys: 201 Created\n{reservationId}
+    deactivate Srv
+    Sys --> Customer: Reservation successful\n(show reservationId)
+end
+
+deactivate Sys
+@enduml

@@ -1,0 +1,43 @@
+@startuml viewReservations
+title View Reservations
+
+actor User
+participant "System" as Sys
+participant "Server" as Srv
+participant "Database" as DB
+
+User -> Sys: loadReservations()
+activate Sys
+
+Sys -> Srv: GET /api/reservations?userId={userId}
+activate Srv
+
+alt userId provided
+    Srv -> DB: getReservationsByUser(userId)
+    activate DB
+
+    alt No Reservations Found
+        DB --> Srv: Empty result
+        Srv --> Sys: 200 OK
+        Sys --> User: "You have no reservations"
+
+    else Reservations Found
+        DB --> Srv: List of user reservations
+        deactivate DB
+        Srv --> Sys: 200 OK [reservations]
+        deactivate Srv
+        Sys --> User: Display reservations list
+    end
+
+else No userId provided
+    Srv -> DB: getAllReservations()
+    activate DB
+    DB --> Srv: All reservations
+    deactivate DB
+    Srv --> Sys: 200 OK [all reservations]
+    deactivate Srv
+    Sys --> User: Display all reservations
+end
+
+deactivate Sys
+@enduml
