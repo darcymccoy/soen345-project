@@ -1,0 +1,32 @@
+@startuml database
+title Database ER Diagram
+
+entity User {
+    * userId : String <<PK>>
+    --
+    email : String
+    phoneNumber : long
+    password : String <<hashed>>
+    role : String
+}
+
+entity Event {
+    * eventId : String <<PK>>
+    --
+    date : long
+    location : String
+    category : String
+}
+
+entity Reservation {
+    * reservationId : String <<PK>>
+    --
+    * userId : String <<FK>>
+    * eventId : String <<FK>>
+    reservedAt : long
+}
+
+User ||--o{ Reservation : "makes"
+Event ||--o{ Reservation : "has"
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml register
+title User Account Registration
+actor User
+participant "System" as Sys
+participant "Server" as Srv
+participant "Database" as DB
+
+User -> Sys: Submit registration form\n(email and/or phoneNumber, password)
+activate Sys
+
+Sys -> Sys: Validate input\n(format check, required fields,\npassword strength)
+
+alt Validation Failed
+    Sys --> User: Show validation errors
+else Validation Passed
+    Sys -> Srv: Send user data\n(email, phoneNumber, password)
+    activate Srv
+
+    Srv -> Srv: Assign userId\nAssign default role
+
+    Srv -> DB: Check if account exists\n(by email or phoneNumber)
+    activate DB
+
+    alt Account Already Exists
+        DB --> Srv: Duplicate found
+        Srv --> Sys: 409 Conflict
+        Sys --> User: "Account already exists"
+    else Account Does Not Exist
+        DB -> DB: Create new User record\n(userId, email, phoneNumber,\nhashedPassword, role)
+        DB --> Srv: Confirmation + userId
+        deactivate DB
+
+        Srv --> Sys: 201 Created
+        deactivate Srv
+
+        Sys --> User: Registration successful\n(redirect to login or auto-login)
+    end
+end
+
+deactivate Sys
+
+@enduml
