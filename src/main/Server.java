@@ -21,7 +21,7 @@ public class Server {
         server.createContext("/styles.css", Server::handleStaticCss);
         server.createContext("/", Server::handleStatic);
 
-        server.setExecutor(null);
+        server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(10));
         server.start();
         System.out.println("Server running at http://localhost:8080");
     }
@@ -225,6 +225,14 @@ public class Server {
                 if (userId.isEmpty() || eventId.isEmpty()) {
                     sendResponse(exchange, 400, "{\"error\":\"userId and eventId are required\"}");
                     return;
+                }
+
+                String existingReservations = Database.getReservationsByUser(userId);
+                if (existingReservations != null && !existingReservations.equals("null") && !existingReservations.equals("{}")) {
+                    if (existingReservations.contains("\"eventId\":\"" + eventId + "\"")) {
+                        sendResponse(exchange, 409, "{\"error\":\"You already have a reservation for this event\"}");
+                        return;
+                    }
                 }
 
                 Reservation reservation = new Reservation(userId, eventId, userEmail);

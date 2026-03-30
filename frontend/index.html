@@ -278,7 +278,7 @@
                     <td>${esc(e.location)}</td>
                     <td>${esc(e.category)}</td>
                     <td class="actions">
-                        <button onclick="reserveTicket('${id}', '${esc(e.location)}', '${esc(e.category)}', ${e.date})">Reserve</button>
+                        <button onclick="reserveTicket('${id}', '${esc(e.location)}', '${esc(e.category)}', ${e.date}, this)">Reserve</button>
                     </td>
                 </tr>
             `).join('');
@@ -286,11 +286,12 @@
 
         // ── Reservations ──
 
-        async function reserveTicket(eventId, location, category, date) {
+        async function reserveTicket(eventId, location, category, date, btn) {
             if (!currentUser) {
                 showMsg('Please login to reserve tickets', 'error');
                 return;
             }
+            if (btn) { btn.disabled = true; btn.textContent = 'Reserving...'; }
             try {
                 const res = await fetch(`${API}/reservations`, {
                     method: 'POST',
@@ -306,12 +307,15 @@
                 });
                 if (res.ok) {
                     showMsg('Ticket reserved! A confirmation email has been sent.', 'success');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Reserve'; }
                 } else {
                     const data = await res.json();
                     showMsg(data.error || 'Failed to reserve ticket', 'error');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Reserve'; }
                 }
             } catch (err) {
                 showMsg('Error: ' + err.message, 'error');
+                if (btn) { btn.disabled = false; btn.textContent = 'Reserve'; }
             }
         }
 
@@ -340,7 +344,7 @@
                             <td>${event ? formatDate(event.date) : '-'}</td>
                             <td>${formatDate(r.reservedAt)}</td>
                             <td class="actions">
-                                <button class="danger" onclick="cancelReservation('${id}')">Cancel</button>
+                                <button class="danger" onclick="cancelReservation('${id}', this)">Cancel</button>
                             </td>
                         </tr>
                     `;
@@ -350,18 +354,25 @@
             }
         }
 
-        async function cancelReservation(reservationId) {
+        async function cancelReservation(reservationId, btn) {
             if (!confirm('Cancel this reservation?')) return;
+            if (btn) { btn.disabled = true; btn.textContent = 'Cancelling...'; }
             try {
                 const res = await fetch(`${API}/reservations/${reservationId}`, { method: 'DELETE' });
                 if (res.ok) {
                     showMsg('Reservation cancelled. A confirmation email has been sent.', 'success');
-                    loadReservations();
+                    const row = btn ? btn.closest('tr') : null;
+                    if (row) row.remove();
+                    if (document.getElementById('reservations-table').children.length === 0) {
+                        document.getElementById('reservations-table').innerHTML = '<tr><td colspan="5">No reservations found.</td></tr>';
+                    }
                 } else {
                     showMsg('Failed to cancel reservation', 'error');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Cancel'; }
                 }
             } catch (err) {
                 showMsg('Error: ' + err.message, 'error');
+                if (btn) { btn.disabled = false; btn.textContent = 'Cancel'; }
             }
         }
 
