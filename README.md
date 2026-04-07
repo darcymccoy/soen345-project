@@ -10,7 +10,7 @@
 
 ## Getting Started
 
-1. Make the local config.properties file. See the [config.properties.example](config.properties.example)
+1. Make the local config.properties file. See the [config.properties.example](config.properties)
 
 2. Set the firebase and email smtp properties
 
