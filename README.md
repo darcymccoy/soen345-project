@@ -1,5 +1,7 @@
 # SOEN 345 Project
 
+Software Testing, Verification and Quality Assurance class project.
+
 ## Group Members
 
 - Darcy McCoy 40234556
@@ -10,10 +12,12 @@
 
 ## Getting Started
 
-1. Make the local config.properties file. See the [config.properties.example](config.properties)
+1. Make the local config.properties file. See the [config.properties.example](config.properties.example) to copy from
 
 2. Set the firebase and email smtp properties
 
-3. Download and add `lib/javax.mail.jar` and `lib\javax.activation-1.2.0.jar` to your classpath. See [stackoverflow for more info](https://stackoverflow.com/questions/6606529/package-javax-mail-and-javax-mail-internet-do-not-exist)
+3. Download `javax.mail.jar` and `javax.activation-1.2.0.jar` and place them in `lib/`
 
-4. Run the main method in Server.java
+4. Add the two .jar files in `lib\` to your classpath. See [stackoverflow for more info](https://stackoverflow.com/questions/6606529/package-javax-mail-and-javax-mail-internet-do-not-exist)
+
+5. Run the main method in Server.java

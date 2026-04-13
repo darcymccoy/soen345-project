@@ -1,0 +1,8 @@
+firebase.database.url=
+firebase.database.secret=
+
+# SMTP settings for emails
+smtp.host=smtp.gmail.com
+smtp.port=587
+smtp.user=
+smtp.password=
