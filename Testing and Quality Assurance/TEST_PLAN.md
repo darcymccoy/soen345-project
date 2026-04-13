@@ -18,6 +18,8 @@ This document describes the test plan and strategy for the Ticket Reservation Ap
 - Unit testing of `Server` helper/utility methods (`parseString`, `parseLong`, `escapeJson`)
 - Integration testing of `Database` class against the live Firebase REST API
 - Basic validation of HTTP routing logic in `Server`
+- CACC testing for Database, EmailService, Reservation, Server, and User
+- CFG testing for `HandleEvents` routing logic
 
 ### 2.2 Out of Scope
 - Frontend UI testing (the HTML/CSS frontend is a thin static client)
@@ -35,6 +37,8 @@ This document describes the test plan and strategy for the Ticket Reservation Ap
 - Verify that `Database` methods correctly communicate with Firebase (CRUD operations)
 - Verify that `Server` helper methods parse and sanitize JSON correctly
 - Ensure no regressions are introduced during development via CI/CD
+- Ensure correctness of decision logic using CACC testing
+- Ensure structural correctness of event-handling logic using CFG testing
 
 ---
 
@@ -53,6 +57,8 @@ The team adopted **Scrum** as the software development methodology. The project 
 | Unit Testing | Test individual classes and methods in isolation | JUnit 5 |
 | Integration Testing | Test `Database` class against the live Firebase API | JUnit 5 |
 | System Testing | Manual end-to-end testing via the web UI and API | Browser + Postman |
+| CACC Testing | Clause-level decision testing for Database, EmailService, Reservation, Server, User | JUnit 5 |
+| CFG Testing | Structural path testing for `HandleEvents` | JUnit 5 |
 
 ### 5.2 Test Types
 
@@ -62,6 +68,20 @@ The team adopted **Scrum** as the software development methodology. The project 
 
 **Acceptance / Functional Tests** are conducted manually by running the server and interacting with the web UI and REST API to verify end-to-end user flows (registration, login, browsing events, making reservations, cancelling).
 
+**CACC Tests** were created for all modules containing multi-clause boolean logic:
+- Database (query filtering, existence checks)
+- EmailService (SMTP enabled/disabled, null checks)
+- Reservation (timestamp logic, field validation)
+- Server (authorization, JSON parsing conditions)
+- User (role assignment, constructor logic)
+
+CACC ensures each clause independently affects the decision outcome.
+
+**CFG Tests** were created specifically for the `HandleEvents` routing logic, covering:
+- Node coverage
+- Edge coverage
+- Basis path coverage (cyclomatic complexity)
+
 ### 5.3 Test Approach
 
 - Tests are written in JUnit 5 and placed in the `src/test/` package
@@ -69,6 +89,8 @@ The team adopted **Scrum** as the software development methodology. The project 
 - Each test method tests a single behavior and has a descriptive name
 - Integration tests use `@BeforeEach` / `@AfterEach` for setup and cleanup
 - Private server methods are tested via Java Reflection
+- CACC clause tables were created for each multi-clause decision
+- CFG path sets were derived from the `HandleEvents` control flow graph
 
 ---
 
@@ -82,6 +104,7 @@ The team adopted **Scrum** as the software development methodology. The project 
 | GitHub Actions | CI/CD pipeline — automatically runs tests on every push and pull request |
 | Firebase Realtime Database | Cloud database (integration test target) |
 | Postman | Manual API testing |
+| Draw.io / IntelliJ Diagrams | Used for CFG diagrams for `HandleEvents` |
 
 ---
 
@@ -221,6 +244,24 @@ This ensures no broken code is merged into the main branch.
 | FT-15 | Cancel Reservation | DELETE `/api/reservations/{id}` | HTTP 200, status="cancelled" |
 | FT-16 | View My Reservations | GET `/api/reservations?userId={id}` | HTTP 200, reservations for that user only |
 
+### 8.8 CACC Test Cases 
+
+| ID | Component | Description | Expected Result |
+|---|---|---|---|
+| CACC-DB01 | Database | Clause coverage for filtering and CRUD decision logic | Each clause independently affects decision outcome |
+| CACC-ES01 | EmailService | SMTP-enabled, null-check, and fallback logic | Correct behavior for all clause combinations |
+| CACC-R01 | Reservation | Timestamp and field validation clauses | Correct timestamping and null handling |
+| CACC-S01 | Server | Authorization and JSON parsing clauses | Correct allow/deny and parsing behavior |
+| CACC-U01 | User | Role assignment and constructor clause logic | Correct role and field initialization |
+
+### 8.9 CFG Test Cases 
+
+| ID | Method | Description | Expected Result |
+|---|---|---|---|
+| CFG-H01 | `HandleEvents` | Node coverage | All nodes executed at least once |
+| CFG-H02 | `HandleEvents` | Edge coverage | All edges executed |
+| CFG-H03 | `HandleEvents` | Basis path coverage | All independent paths executed |
+
 ---
 
 ## 9. Entry and Exit Criteria
@@ -235,6 +276,8 @@ This ensures no broken code is merged into the main branch.
 - All integration tests pass against Firebase
 - All manual functional test cases have been executed and documented
 - CI/CD pipeline reports a green build on the `main` branch
+- All CACC tests achieve full clause coverage
+- All CFG tests achieve basis path coverage for `HandleEvents`
 
 ---
 
@@ -246,7 +289,8 @@ This ensures no broken code is merged into the main branch.
 | SMTP credentials not configured | Medium | Low | EmailService degrades gracefully with console output |
 | Test data polluting Firebase | Medium | Medium | Each integration test deletes its own data in cleanup |
 | Private method access via reflection | Low | Low | If Java security manager blocks it, refactor to package-private |
-
+| CACC clause explosion | Low | Medium | Limit to meaningful clause combinations |
+| CFG path explosion in HandleEvents | Medium | Medium | Use cyclomatic complexity to limit required paths |
 ---
 
 ## 11. Version Control & Collaboration
