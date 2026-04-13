@@ -26,6 +26,19 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class EmailServiceCCACTest {
 
+    // ── Skip entire class if javax.mail is not on the runtime classpath ────
+    // Even the early-return (SMTP_USER empty) path requires the JVM to verify
+    // the full method bytecode, which references javax.mail.Authenticator.
+    @BeforeAll
+    static void requireJavaxMail() {
+        try {
+            Class.forName("javax.mail.Session");
+        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+            Assumptions.assumeTrue(false,
+                    "javax.mail not on test classpath — skipping all EmailService CCAC tests");
+        }
+    }
+
     private ByteArrayOutputStream outCapture;
     private PrintStream originalOut;
 
