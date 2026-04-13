@@ -105,4 +105,24 @@ class UserTest {
         String json = user.toJson();
         assertTrue(json.contains("\"password\":\"\""));
     }
+
+    // ── CCAC: toJson  c3 = role != null ───────────────────────────────────
+
+    /** c3 T1 – role == null → toJson substitutes the "user" default. */
+    @Test
+    void testToJsonRoleNull_defaultsToUser() {
+        // Full constructor allows passing null role
+        User user = new User("a@b.com", 0L, "pw", null);
+        String json = user.toJson();
+        assertTrue(json.contains("\"role\":\"user\""),
+                "Expected default role 'user' when role is null, got: " + json);
+    }
+
+    /** c3 T2 – role != null → toJson uses the stored role value. */
+    @Test
+    void testToJsonRoleNotNull_usesStoredRole() {
+        User user = new User("a@b.com", 0L, "pw", "admin");
+        String json = user.toJson();
+        assertTrue(json.contains("\"role\":\"admin\""));
+    }
 }
