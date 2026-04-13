@@ -291,6 +291,7 @@ This ensures no broken code is merged into the main branch.
 | Private method access via reflection | Low | Low | If Java security manager blocks it, refactor to package-private |
 | CACC clause explosion | Low | Medium | Limit to meaningful clause combinations |
 | CFG path explosion in HandleEvents | Medium | Medium | Use cyclomatic complexity to limit required paths |
+
 ---
 
 ## 11. Version Control & Collaboration
