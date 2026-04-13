@@ -4,6 +4,7 @@ import main.EmailService;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
+import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,29 +14,35 @@ import static org.junit.jupiter.api.Assertions.*;
  * Both methods share the same predicate structure:
  *   P1 = c1 || c2   where  c1 = SMTP_USER.isEmpty(),  c2 = SMTP_PASS.isEmpty()
  *
- * With the default config.properties (no smtp.user / smtp.password entries),
- * SMTP_USER = "" and SMTP_PASS = "", so:
- *   - T1 cases (at least one empty → early-return path) are directly exercisable:
- *     the method logs "EMAIL (SMTP not configured) …" to stdout.
- *   - T2 cases (both non-empty → SMTP send attempted) require real SMTP
- *     credentials.  Those tests are marked @Disabled and serve as
- *     documentation of the expected behaviour when credentials are present.
- *
- * sendCancelationConfirmation uses the same predicate; the table labels its
- * SMTP_USER clause as c3 and SMTP_PASS clause as c4 to distinguish them.
+ * T1 cases require SMTP credentials to be absent (empty strings in config).
+ * T2 cases require real credentials in config.properties.
+ * The tests detect the current config state at runtime and skip
+ * whichever set of cases is infeasible.
  */
 class EmailServiceCCACTest {
 
-    // ── Skip entire class if javax.mail is not on the runtime classpath ────
-    // Even the early-return (SMTP_USER empty) path requires the JVM to verify
-    // the full method bytecode, which references javax.mail.Authenticator.
+    // ── Detect javax.mail availability and SMTP configuration ─────────────
+    private static boolean smtpConfigured;
+
     @BeforeAll
-    static void requireJavaxMail() {
+    static void detectEnvironment() {
+        // Skip entire class if javax.mail / javax.activation are missing
         try {
             Class.forName("javax.mail.Session");
+            Class.forName("javax.activation.DataHandler");
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             Assumptions.assumeTrue(false,
-                    "javax.mail not on test classpath — skipping all EmailService CCAC tests");
+                    "javax.mail or javax.activation not on test classpath — skipping all EmailService CCAC tests");
+        }
+
+        // Detect whether SMTP credentials are present by reading the private static field
+        try {
+            Field f = EmailService.class.getDeclaredField("SMTP_USER");
+            f.setAccessible(true);
+            String user = (String) f.get(null);
+            smtpConfigured = user != null && !user.isEmpty();
+        } catch (Exception e) {
+            smtpConfigured = false;
         }
     }
 
@@ -67,12 +74,13 @@ class EmailServiceCCACTest {
     // ── Active clause = c1 ────────────────────────────────────────────────
 
     /**
-     * T1 – c1=T (SMTP_USER empty), c2=F not required to be distinct:
-     * with default config both fields are empty, so P1 is true and
-     * the method takes the early-return logging path.
+     * T1 – c1=T (SMTP_USER empty) → P1=T → early-return, logs to stdout.
+     * Requires: no smtp.user in config.properties.
      */
     @Test
     void sendBookingConfirmation_c1_T1_smtpUserEmpty_logsToStdout() {
+        Assumptions.assumeFalse(smtpConfigured,
+                "SMTP is configured — T1 (SMTP_USER empty) is infeasible; run without credentials");
         EmailService.sendBookingConfirmation(
                 "book@example.com", "Montreal", "Music", "2026-01-01");
         String out = captured();
@@ -82,13 +90,13 @@ class EmailServiceCCACTest {
     }
 
     /**
-     * T2 – c1=F (SMTP_USER non-empty), c2=F (SMTP_PASS non-empty):
-     * P1=F → method attempts actual SMTP send.
-     * Disabled: requires smtp.user and smtp.password in config.properties.
+     * T2 – c1=F (SMTP_USER non-empty), c2=F → P1=F → SMTP send attempted.
+     * Requires: smtp.user and smtp.password in config.properties.
      */
     @Test
-    @Disabled("Requires SMTP credentials: set smtp.user and smtp.password in config.properties")
     void sendBookingConfirmation_c1_T2_smtpUserConfigured_attemptsSend() {
+        Assumptions.assumeTrue(smtpConfigured,
+                "SMTP not configured — T2 requires credentials in config.properties");
         EmailService.sendBookingConfirmation(
                 "book@example.com", "Montreal", "Music", "2026-01-01");
         assertFalse(captured().contains("EMAIL (SMTP not configured)"));
@@ -97,24 +105,24 @@ class EmailServiceCCACTest {
     // ── Active clause = c2 ────────────────────────────────────────────────
 
     /**
-     * T1 – c2=T (SMTP_PASS empty), c1=F not required to be distinct:
-     * P1=T → early-return logging path.
+     * T1 – c2=T (SMTP_PASS empty) → P1=T → early-return, logs to stdout.
      */
     @Test
     void sendBookingConfirmation_c2_T1_smtpPassEmpty_logsToStdout() {
+        Assumptions.assumeFalse(smtpConfigured,
+                "SMTP is configured — T1 (SMTP_PASS empty) is infeasible; run without credentials");
         EmailService.sendBookingConfirmation(
                 "book2@example.com", "Toronto", "Concert", "2026-06-01");
         assertTrue(captured().contains("EMAIL (SMTP not configured)"));
     }
 
     /**
-     * T2 – c2=F (SMTP_PASS non-empty) and c1=F (SMTP_USER non-empty):
-     * P1=F → SMTP send attempted.
-     * Disabled: requires SMTP credentials.
+     * T2 – c2=F (SMTP_PASS non-empty), c1=F → P1=F → SMTP send attempted.
      */
     @Test
-    @Disabled("Requires SMTP credentials: set smtp.user and smtp.password in config.properties")
     void sendBookingConfirmation_c2_T2_smtpPassConfigured_attemptsSend() {
+        Assumptions.assumeTrue(smtpConfigured,
+                "SMTP not configured — T2 requires credentials in config.properties");
         EmailService.sendBookingConfirmation(
                 "book2@example.com", "Toronto", "Concert", "2026-06-01");
         assertFalse(captured().contains("EMAIL (SMTP not configured)"));
@@ -128,10 +136,12 @@ class EmailServiceCCACTest {
     // ── Active clause = c3 ────────────────────────────────────────────────
 
     /**
-     * T1 – c3=T (SMTP_USER empty): P1=T → early-return logging path.
+     * T1 – c3=T (SMTP_USER empty) → P1=T → early-return, logs to stdout.
      */
     @Test
     void sendCancelationConfirmation_c3_T1_smtpUserEmpty_logsToStdout() {
+        Assumptions.assumeFalse(smtpConfigured,
+                "SMTP is configured — T1 (SMTP_USER empty) is infeasible; run without credentials");
         EmailService.sendCancellationConfirmation(
                 "cancel@example.com", "Montreal", "Music", "2026-01-01");
         String out = captured();
@@ -141,12 +151,12 @@ class EmailServiceCCACTest {
     }
 
     /**
-     * T2 – c3=F, c4=F: P1=F → SMTP send attempted.
-     * Disabled: requires SMTP credentials.
+     * T2 – c3=F, c4=F → P1=F → SMTP send attempted.
      */
     @Test
-    @Disabled("Requires SMTP credentials: set smtp.user and smtp.password in config.properties")
     void sendCancelationConfirmation_c3_T2_smtpUserConfigured_attemptsSend() {
+        Assumptions.assumeTrue(smtpConfigured,
+                "SMTP not configured — T2 requires credentials in config.properties");
         EmailService.sendCancellationConfirmation(
                 "cancel@example.com", "Montreal", "Music", "2026-01-01");
         assertFalse(captured().contains("EMAIL (SMTP not configured)"));
@@ -155,22 +165,24 @@ class EmailServiceCCACTest {
     // ── Active clause = c4 ────────────────────────────────────────────────
 
     /**
-     * T1 – c4=T (SMTP_PASS empty): P1=T → early-return logging path.
+     * T1 – c4=T (SMTP_PASS empty) → P1=T → early-return, logs to stdout.
      */
     @Test
     void sendCancelationConfirmation_c4_T1_smtpPassEmpty_logsToStdout() {
+        Assumptions.assumeFalse(smtpConfigured,
+                "SMTP is configured — T1 (SMTP_PASS empty) is infeasible; run without credentials");
         EmailService.sendCancellationConfirmation(
                 "cancel2@test.com", "Ottawa", "Sports", "2026-02-01");
         assertTrue(captured().contains("EMAIL (SMTP not configured)"));
     }
 
     /**
-     * T2 – c4=F, c3=F: P1=F → SMTP send attempted.
-     * Disabled: requires SMTP credentials.
+     * T2 – c4=F, c3=F → P1=F → SMTP send attempted.
      */
     @Test
-    @Disabled("Requires SMTP credentials: set smtp.user and smtp.password in config.properties")
     void sendCancelationConfirmation_c4_T2_smtpPassConfigured_attemptsSend() {
+        Assumptions.assumeTrue(smtpConfigured,
+                "SMTP not configured — T2 requires credentials in config.properties");
         EmailService.sendCancellationConfirmation(
                 "cancel2@test.com", "Ottawa", "Sports", "2026-02-01");
         assertFalse(captured().contains("EMAIL (SMTP not configured)"));

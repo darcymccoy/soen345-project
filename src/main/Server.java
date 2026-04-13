@@ -29,22 +29,22 @@ public class Server {
     private static void handleEvents(HttpExchange exchange) throws IOException {
         addCorsHeaders(exchange);
         String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
+        String path = exchange.getRequestURI().getPath(); // node 1
 
-        if (method.equals("OPTIONS")) {
+        if (method.equals("OPTIONS")) { // a // node 2
             exchange.sendResponseHeaders(204, -1);
             return;
         }
 
         try {
-            if (method.equals("GET") && path.equals("/api/events")) {
-                String json = Database.getAllEvents();
+            if (method.equals("GET") && path.equals("/api/events")) { // b & c // node 3
+                String json = Database.getAllEvents(); // node 4
                 sendResponse(exchange, 200, json);
 
-            } else if (method.equals("POST") && path.equals("/api/events")) {
+            } else if (method.equals("POST") && path.equals("/api/events")) { // d & c // node 5
                 String body = readBody(exchange);
-                String role = parseString(body, "role");
-                if (!"admin".equals(role)) {
+                String role = parseString(body, "role"); // node 6
+                if (!"admin".equals(role)) { // g // node 7
                     sendResponse(exchange, 403, "{\"error\":\"Only administrators can add events\"}");
                     return;
                 }
@@ -52,38 +52,38 @@ public class Server {
                 String location = parseString(body, "location");
                 String category = parseString(body, "category");
                 Event event = new Event(date, location, category);
-                String eventId = Database.addEvent(event);
+                String eventId = Database.addEvent(event); // node 8
                 sendResponse(exchange, 201, "{\"eventId\":\"" + escapeJson(eventId) + "\"}");
 
-            } else if (method.equals("PUT") && path.startsWith("/api/events/")) {
+            } else if (method.equals("PUT") && path.startsWith("/api/events/")) {  // e & c // node 9
                 String eventId = path.substring("/api/events/".length());
                 String body = readBody(exchange);
-                String role = parseString(body, "role");
-                if (!"admin".equals(role)) {
+                String role = parseString(body, "role"); // node 10
+                if (!"admin".equals(role)) { // g // node 11
                     sendResponse(exchange, 403, "{\"error\":\"Only administrators can edit events\"}");
                     return;
                 }
                 long date = parseLong(body, "date");
                 String location = parseString(body, "location");
                 String category = parseString(body, "category");
-                Event event = new Event(eventId, date, location, category);
+                Event event = new Event(eventId, date, location, category); // node 12
                 Database.updateEvent(event);
                 sendResponse(exchange, 200, "{\"status\":\"updated\"}");
 
-            } else if (method.equals("DELETE") && path.startsWith("/api/events/")) {
+            } else if (method.equals("DELETE") && path.startsWith("/api/events/")) { // f & c // node 13
                 String eventId = path.substring("/api/events/".length());
                 String query = exchange.getRequestURI().getQuery();
-                String role = "";
-                if (query != null) {
-                    for (String param : query.split("&")) {
-                        if (param.startsWith("role=")) role = param.substring(5);
+                String role = ""; // node 14
+                if (query != null) { // h // node 15
+                    for (String param : query.split("&")) { // node 16
+                        if (param.startsWith("role=")) role = param.substring(5); // i // node 17 & 18
                     }
                 }
-                if (!"admin".equals(role)) {
+                if (!"admin".equals(role)) { // g // node 19
                     sendResponse(exchange, 403, "{\"error\":\"Only administrators can cancel events\"}");
                     return;
                 }
-                Event event = new Event(eventId, 0, "", "");
+                Event event = new Event(eventId, 0, "", ""); // node 20
                 Database.deleteEvent(event);
                 sendResponse(exchange, 200, "{\"status\":\"deleted\"}");
 

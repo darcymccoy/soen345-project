@@ -31,6 +31,7 @@ class ServerCCACTest {
     static void detectJavaxMail() {
         try {
             Class.forName("javax.mail.Session");
+            Class.forName("javax.activation.DataHandler");
             javaxMailAvailable = true;
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             javaxMailAvailable = false;
@@ -816,7 +817,8 @@ class ServerCCACTest {
         } finally {
             System.setOut(orig);
         }
-        assertTrue(captured.toString().contains("EMAIL"));
+        assertTrue(captured.toString().contains("test@example.com"),
+                "Expected cancellation email log for test@example.com, got: " + captured);
     }
 
     /** T2 (c16 active) – userEmail empty → email block skipped. */
@@ -842,7 +844,8 @@ class ServerCCACTest {
         } finally {
             System.setOut(orig);
         }
-        assertFalse(captured.toString().contains("EMAIL"));
+        assertFalse(captured.toString().toLowerCase().contains("email"),
+                "Expected no email log when userEmail is empty, got: " + captured);
     }
 
     // ══════════════════════════════════════════════════════════════════════
